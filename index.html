@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RLMM-Flow</title>
+<style>
+:root{
+--ink:#172033;--muted:#61708a;--accent:#008c95;--accent-soft:#e8fbfb;
+--panel:#f5f8fa;--line:#dce5ea
+}
+body{margin:0;color:var(--ink);font:16px/1.7 Inter,Arial,sans-serif;background:white}
+.wrap{width:min(1100px,92vw);margin:auto}
+.hero{text-align:center;padding:75px 0;background:linear-gradient(180deg,#eefafa,#fff)}
+h1{font-size:4rem;letter-spacing:-.05em;margin:10px}
+.subtitle{font-size:1.5rem;color:#445}
+.authors{color:var(--muted)}
+.btn{display:inline-block;padding:10px 20px;border-radius:25px;background:var(--ink);color:white;text-decoration:none;margin:10px}
+section{margin:60px 0}
+h2{font-size:2rem;color:var(--accent)}
+.card,.figure{border:1px solid var(--line);border-radius:18px;padding:25px;background:white}
+.figure img{width:100%;border-radius:12px}
+.caption{text-align:center;color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+.num{font-size:2.3rem;color:var(--accent);font-weight:800}
+table{width:100%;border-collapse:collapse}
+td,th{padding:12px;border-bottom:1px solid var(--line);text-align:center}
+@media(max-width:800px){.cards{grid-template-columns:1fr}h1{font-size:2.8rem}}
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap">
+<h1>RLMM-Flow</h1>
+<p class="subtitle">Flow Matching Prior Reinforcement Learning for Mobile Manipulation</p>
+<p class="authors"><strong>Shuhang Wang, Ziming Li, Le Zheng, Hui Cheng</strong><br/>Sun Yat-sen University</p>
+<a class="btn" href="paper.pdf">Paper PDF</a>
+</div></header>
+
+<main class="wrap">
+
+<section>
+<h2>Real-world Deployment</h2>
+<div class="figure">
+<video controls width="100%">
+<source src="assets/demo.mp4">
+</video>
+<p class="caption">Real-world mobile manipulation experiments with RLMM-Flow.</p>
+</div>
+</section>
+
+<section>
+<h2>Abstract</h2>
+<div class="card">
+RLMM-Flow proposes a point-cloud-conditioned cascaded flow policy and improves
+a pretrained flow prior through latent-space reinforcement learning. The policy
+generates base actions before arm actions and performs coarse-to-fine latent
+steering for high-dimensional mobile manipulation.
+</div>
+</section>
+
+<section>
+<h2>RLMM-Flow Pipeline</h2>
+<div class="figure">
+<img src="assets/pipeline.png">
+<p class="caption">Overview of RLMM-Flow pipeline.</p>
+</div>
+<div class="card">
+The framework consists of expert flow pretraining and latent-space RL
+post-training. A latent critic evaluates generated actions, while coarse-to-fine
+steering progressively improves the initial noise distribution. The optimized
+latent variables are decoded by the frozen flow policy into whole-body action
+chunks.
+</div>
+</section>
+
+<section>
+<h2>Network Architecture</h2>
+<div class="figure">
+<img src="assets/network.png">
+<p class="caption">Cascaded transformer flow architecture.</p>
+</div>
+<div class="card">
+RLMM-Flow adopts a cascaded transformer flow policy that explicitly models the
+heterogeneous structure of mobile manipulators by generating base motion before
+arm motion. Point-cloud observations provide conditioning information for action
+generation.
+</div>
+</section>
+
+<section>
+<h2>Quantitative Results</h2>
+<div class="card">
+<h3>Simulation Benchmark</h3>
+<table>
+<tr><th>Method</th><th>Success ↑</th><th>Collision ↓</th><th>Joint Viol. ↓</th><th>Time ↓</th></tr>
+<tr><td>Base Flow</td><td>36</td><td>18</td><td>10</td><td>0.18</td></tr>
+<tr><td><b>RLMM-Flow</b></td><td><b>46</b></td><td><b>12</b></td><td><b>8</b></td><td>0.21</td></tr>
+</table>
+</div>
+
+<div class="cards">
+<div class="card"><div class="num">32%</div>Real-world Success Rate</div>
+<div class="card"><div class="num">0.21s</div>Inference Time</div>
+<div class="card"><div class="num">4.57cm</div>Base Error</div>
+</div>
+</section>
+
+<section>
+<h2>Ablation Study</h2>
+<div class="cards">
+<div class="card"><b>Latent RL</b><p>Stable optimization over pretrained flow priors.</p></div>
+<div class="card"><b>QA Warm-up</b><p>Improves critic initialization.</p></div>
+<div class="card"><b>Coarse-to-fine</b><p>Enhances high-dimensional refinement.</p></div>
+</div>
+</section>
+
+</main>
+</body>
+</html>
