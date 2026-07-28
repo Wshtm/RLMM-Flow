@@ -416,11 +416,26 @@
     <h2>Key Innovations</h2>
 
     <article class="innovation warm">
-        <div class="innovation-tag">
-            <span style="white-space: nowrap;">Q<sup>A</sup></span><br/>
-            <span style="white-space: nowrap;">Warm&#8209;up</span>
-          </div>
-      <div>
+       <div class="innovation-tag"
+     style="
+       display: inline-flex;
+       flex-direction: column;
+       align-items: center;
+       justify-content: space-between;
+       width: 120px;
+       height: 112px;
+       padding: 10px 6px 9px;
+       box-sizing: border-box;
+       line-height: 1;
+     ">
+  <span style="white-space: nowrap; font-size: 22px;">
+    Q<sup style="font-size: 60%;">A</sup>
+  </span>
+
+  <span style="white-space: nowrap; font-size: 20px;">
+    Warm&#8209;up
+  </span>
+</div>
         <h3>Action-Critic Warm-up Stabilizes Latent Value Learning</h3>
         <p>
           The latent critic Q<sup>W</sup> is supervised by values produced by the action critic Q<sup>A</sup>. Jointly training both critics from the beginning creates a moving-target problem: Q<sup>W</sup> must fit action-space values that are still inaccurate and rapidly changing. RLMM-Flow therefore trains Q<sup>A</sup> alone during the first 20k update steps, then starts latent-critic distillation and latent-actor optimization.
