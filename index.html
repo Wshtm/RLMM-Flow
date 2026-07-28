@@ -415,48 +415,38 @@
     <span class="section-kicker">Core contributions</span>
     <h2>Key Innovations</h2>
 
-    <article class="innovation warm">
-<div class="innovation-tag"
-     style="
-       display: flex;
-       flex-direction: column;
-       align-items: center;
-       justify-content: center;
-       gap: 6px;
-       background: #eaf6f2;
-       color: #155e5b;
-     ">
-  <span style="
-          font-size: 18px;
-          font-weight: 700;
-          line-height: 1;
-          white-space: nowrap;
-        ">
-    Q<sup style="
-          font-size: 0.58em;
-          position: relative;
-          top: -0.3em;
-        ">A</sup>
-  </span>
+    <article class="innovation">
+  <div class="innovation-tag">
+    <span style="white-space: nowrap;">
+      Q<sup>A</sup>
+    </span>
+    <span style="white-space: nowrap; font-size: 14px;">
+      Warm-up
+    </span>
+  </div>
 
-  <span style="
-          font-size: 16px;
-          font-weight: 700;
-          line-height: 1;
-          white-space: nowrap;
-        ">
-    Warm-up
-  </span>
-</div>
-        <h3>Action-Critic Warm-up Stabilizes Latent Value Learning</h3>
-        <p>
-          The latent critic Q<sup>W</sup> is supervised by values produced by the action critic Q<sup>A</sup>. Jointly training both critics from the beginning creates a moving-target problem: Q<sup>W</sup> must fit action-space values that are still inaccurate and rapidly changing. RLMM-Flow therefore trains Q<sup>A</sup> alone during the first 20k update steps, then starts latent-critic distillation and latent-actor optimization.
-        </p>
-        <p>
-          Warm-up is not merely extra training time. It improves the supervision quality available to Q<sup>W</sup>, reduces late-stage latent-critic loss, and provides a more reliable optimization direction for the latent actor. In the experiments, the QA variant primarily improves joint constraints, smoothness, and manipulator joint-path length.
-        </p>
-      </div>
-    </article>
+  <div>
+    <h3>Action-Critic Warm-up Stabilizes Latent Value Learning</h3>
+
+    <p>
+      The latent critic Q<sup>W</sup> is supervised by values produced by the
+      action critic Q<sup>A</sup>. Jointly training both critics from the
+      beginning creates a moving-target problem: Q<sup>W</sup> must fit
+      action-space values that are still inaccurate and rapidly changing.
+      RLMM-Flow therefore trains Q<sup>A</sup> alone during the first 20k
+      update steps, then starts latent-critic distillation and latent-actor
+      optimization.
+    </p>
+
+    <p>
+      Warm-up is not merely extra training time. It improves the supervision
+      quality available to Q<sup>W</sup>, reduces late-stage latent-critic
+      loss, and provides a more reliable optimization direction for the latent
+      actor. In the experiments, the QA variant primarily improves joint
+      constraints, smoothness, and manipulator joint-path length.
+    </p>
+  </div>
+</article>
 
     <article class="innovation">
       <div class="innovation-tag">Coarse<br/>→ Fine</div>
