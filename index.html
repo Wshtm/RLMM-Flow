@@ -339,19 +339,15 @@
 <main class="wrap">
 
   <section id="demo">
-    <span class="section-kicker">Real-world deployment</span>
+    <span class="section-kicker">Video</span>
     <h2>Whole-body Mobile Manipulation</h2>
-    <p class="lead">
-      RLMM-Flow is directly transferred to a real mobile manipulator without reconstructing a real execution-trajectory dataset, online reinforcement learning, or additional real-world fine-tuning.
-    </p>
+   
     <figure class="figure">
       <video controls playsinline preload="metadata">
         <source src="assets/demo.mp4" type="video/mp4" />
         Your browser does not support embedded video.
       </video>
-      <figcaption class="caption">
-        Real-world deployment on a Unitree Z1 6-DoF manipulator mounted on an AgileX Tracer differential-drive base. A Livox MID-360 and FastLIO2 provide robot-centric local point clouds, and inference runs on an NVIDIA Jetson AGX Orin.
-      </figcaption>
+     
     </figure>
   </section>
 
@@ -385,7 +381,7 @@
       <div class="stage-flow" aria-label="RLMM-Flow training stages">
         <span class="stage">Expert Flow Pretraining</span>
         <span class="arrow">→</span>
-        <span class="stage emphasis">Q<sup>A</sup> Warm-up</span>
+        <span class="stage emphasis">QA</sup> Warm-up</span>
         <span class="arrow">→</span>
         <span class="stage">Latent Critic Distillation</span>
         <span class="arrow">→</span>
