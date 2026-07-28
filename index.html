@@ -1,129 +1,617 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RLMM-Flow</title>
-<style>
-:root{--ink:#172033;--muted:#63738a;--accent:#007f86;--soft:#e9f8f8;--line:#dde5ea}
-body{margin:0;font:16px/1.7 Inter,Arial,sans-serif;color:var(--ink)}
-.wrap{width:min(1100px,92vw);margin:auto}
-.hero{text-align:center;padding:80px 0;background:radial-gradient(circle,#e8f8f8,#fff)}
-h1{font-size:4.5rem;letter-spacing:-.06em;margin:0}
-.subtitle{font-size:1.5rem;color:#435}
-.authors{color:var(--muted)}
-.btn{display:inline-block;padding:10px 20px;border-radius:25px;background:#172033;color:#fff;text-decoration:none}
-section{margin:65px 0}
-h2{font-size:2rem;color:var(--accent)}
-.card,.figure{border:1px solid var(--line);border-radius:18px;padding:24px;background:#fff}
-.figure img{width:100%;border-radius:12px}
-.caption{text-align:center;color:var(--muted);font-size:.9rem}
-.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.num{font-size:2.2rem;font-weight:800;color:var(--accent)}
-table{width:100%;border-collapse:collapse}
-th,td{padding:12px;border-bottom:1px solid var(--line);text-align:center}
-@media(max-width:800px){.cards{grid-template-columns:1fr}h1{font-size:3rem}}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="RLMM-Flow: latent-space reinforcement learning for flow-based mobile manipulation." />
+  <meta property="og:title" content="RLMM-Flow" />
+  <meta property="og:description" content="Action-critic warm-up and coarse-to-fine latent steering for whole-body mobile manipulation." />
+  <meta property="og:image" content="assets/pipeline.png" />
+  <title>RLMM-Flow</title>
+
+  <style>
+    :root{
+      --ink:#12211f;
+      --muted:#60736f;
+      --accent:#087f6b;
+      --accent-dark:#075f52;
+      --accent-soft:#e7f7f2;
+      --accent-soft-2:#f3fbf8;
+      --warm:#d9822b;
+      --warm-soft:#fff5e9;
+      --panel:#f5f9f8;
+      --line:#dce8e4;
+      --white:#fff;
+      --good:#087f6b;
+      --shadow:0 16px 44px rgba(24,68,59,.08);
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      color:var(--ink);
+      font:16px/1.7 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:#fff;
+    }
+    a{color:inherit}
+    .wrap{width:min(1120px,92vw);margin:auto}
+
+    .hero{
+      padding:78px 0 48px;
+      text-align:center;
+      background:
+        radial-gradient(circle at 20% 0,rgba(8,127,107,.13),transparent 37%),
+        radial-gradient(circle at 82% 8%,rgba(217,130,43,.10),transparent 31%),
+        linear-gradient(180deg,#f4fbf8 0%,#fff 92%);
+    }
+    .eyebrow{
+      font-size:.78rem;
+      font-weight:800;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:var(--accent);
+    }
+    .hero h1{
+      margin:.22em 0 .18em;
+      font-size:clamp(2.8rem,7vw,5.4rem);
+      line-height:.96;
+      letter-spacing:-.065em;
+    }
+    .subtitle{
+      max-width:940px;
+      margin:0 auto 18px;
+      font-family:Georgia,serif;
+      font-size:clamp(1.18rem,2.6vw,1.72rem);
+      line-height:1.38;
+      color:#29453f;
+    }
+    .authors{margin:12px 0 25px;color:var(--muted)}
+    .authors strong{color:var(--ink)}
+    .buttons{display:flex;gap:11px;justify-content:center;flex-wrap:wrap}
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:10px 18px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      text-decoration:none;
+      font-weight:750;
+      box-shadow:0 5px 20px rgba(20,55,49,.06);
+    }
+    .btn.primary{
+      color:#fff;
+      background:var(--accent-dark);
+      border-color:var(--accent-dark);
+    }
+
+    main{padding:30px 0 80px}
+    section{margin:62px 0;scroll-margin-top:24px}
+    h2{
+      margin:0 0 15px;
+      font-size:1.9rem;
+      line-height:1.2;
+      letter-spacing:-.04em;
+    }
+    h3{
+      margin:0 0 8px;
+      font-size:1.08rem;
+      letter-spacing:-.015em;
+    }
+    p{margin:0 0 15px}
+    .lead{font-size:1.08rem;color:#334d48}
+    .section-kicker{
+      display:inline-block;
+      margin-bottom:10px;
+      padding:4px 10px;
+      border-radius:999px;
+      color:var(--accent-dark);
+      background:var(--accent-soft);
+      font-size:.77rem;
+      font-weight:800;
+      letter-spacing:.05em;
+      text-transform:uppercase;
+    }
+
+    .figure{
+      margin:20px 0 0;
+      padding:14px;
+      overflow:hidden;
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:var(--panel);
+      box-shadow:var(--shadow);
+    }
+    .figure img,.figure video{
+      display:block;
+      width:100%;
+      height:auto;
+      border-radius:12px;
+      background:#fff;
+    }
+    .caption{
+      margin:11px 14px 2px;
+      color:var(--muted);
+      font-size:.89rem;
+      text-align:center;
+    }
+
+    .explanation{
+      margin-top:24px;
+      padding:26px 28px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:linear-gradient(135deg,#fff 0%,var(--accent-soft-2) 100%);
+    }
+    .explanation>p{color:#334d48;font-size:1.03rem}
+
+    .stage-flow{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:9px;
+      flex-wrap:wrap;
+      margin:22px 0 3px;
+    }
+    .stage{
+      padding:8px 13px;
+      border-radius:999px;
+      color:var(--accent-dark);
+      background:var(--accent-soft);
+      font-size:.9rem;
+      font-weight:780;
+      text-align:center;
+    }
+    .stage.emphasis{
+      color:#7d4213;
+      background:var(--warm-soft);
+      border:1px solid #f1d2ae;
+    }
+    .arrow{color:#93a6a1;font-weight:900}
+
+    .cards{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:16px;
+    }
+    .card{
+      padding:21px;
+      border:1px solid var(--line);
+      border-radius:17px;
+      background:#fff;
+    }
+    .card p{margin:8px 0 0;color:var(--muted);font-size:.94rem}
+    .card.featured{
+      background:linear-gradient(145deg,#fff,var(--accent-soft-2));
+      border-color:#bfded6;
+    }
+    .index{
+      display:inline-grid;
+      width:30px;
+      height:30px;
+      margin-bottom:10px;
+      place-items:center;
+      border-radius:50%;
+      color:#fff;
+      background:var(--accent);
+      font-size:.82rem;
+      font-weight:850;
+    }
+    .index.warm{background:var(--warm)}
+    .num{
+      display:block;
+      color:var(--accent);
+      font-size:2.15rem;
+      line-height:1.05;
+      font-weight:880;
+      letter-spacing:-.045em;
+    }
+    .small{margin-top:7px;color:var(--muted);font-size:.91rem}
+
+    .innovation{
+      display:grid;
+      grid-template-columns:90px 1fr;
+      gap:20px;
+      align-items:start;
+      margin-top:17px;
+      padding:23px 25px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:#fff;
+    }
+    .innovation-tag{
+      display:grid;
+      width:76px;
+      height:76px;
+      place-items:center;
+      border-radius:18px;
+      color:var(--accent-dark);
+      background:var(--accent-soft);
+      font-weight:900;
+      text-align:center;
+      line-height:1.15;
+    }
+    .innovation.warm .innovation-tag{
+      color:#824819;
+      background:var(--warm-soft);
+    }
+    .innovation p{margin:5px 0;color:#435b56}
+
+    .callout{
+      margin-top:18px;
+      padding:17px 19px;
+      border-left:4px solid var(--accent);
+      border-radius:10px;
+      background:var(--accent-soft-2);
+      color:#294b44;
+    }
+
+    .table-wrap{
+      margin-top:18px;
+      overflow-x:auto;
+      border:1px solid var(--line);
+      border-radius:17px;
+      background:#fff;
+    }
+    table{
+      width:100%;
+      min-width:850px;
+      border-collapse:collapse;
+    }
+    th,td{
+      padding:12px 11px;
+      border-bottom:1px solid var(--line);
+      text-align:center;
+      white-space:nowrap;
+    }
+    th{
+      color:#35534c;
+      background:#f2f8f6;
+      font-size:.9rem;
+    }
+    td:first-child,th:first-child{text-align:left;padding-left:16px}
+    tbody tr:last-child td{border-bottom:0}
+    tbody tr.best{background:#edf9f5}
+    .up{color:var(--good);font-weight:850}
+
+    .split-title{
+      margin:30px 0 10px;
+      color:#314a45;
+      font-size:1.14rem;
+    }
+
+    .two-col{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+    }
+    .mini-figure{
+      padding:12px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:var(--panel);
+    }
+    .mini-figure img{
+      display:block;
+      width:100%;
+      border-radius:10px;
+      background:#fff;
+    }
+    .mini-figure .caption{margin-top:9px}
+
+    footer{
+      padding:32px 0;
+      border-top:1px solid var(--line);
+      color:var(--muted);
+      font-size:.9rem;
+      text-align:center;
+    }
+
+    @media(max-width:820px){
+      .cards,.two-col{grid-template-columns:1fr}
+      .innovation{grid-template-columns:1fr}
+      .hero{padding-top:55px}
+      .explanation{padding:21px}
+      .wrap{width:min(94vw,1120px)}
+    }
+  </style>
 </head>
+
 <body>
-<header class="hero"><div class="wrap">
-<h1>RLMM-Flow</h1>
-<p class="subtitle">Latent-Space Reinforcement Learning for Generative Flow Policies in Mobile Manipulation</p>
-<p class="authors"><strong>Shuhang Wang, Ziming Li, Le Zheng, Hui Cheng</strong><br/>Sun Yat-sen University</p>
-<a class="btn" href="paper.pdf">Paper PDF</a>
-</div></header>
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Preprint · 2026</div>
+    <h1>RLMM-Flow</h1>
+    <p class="subtitle">A Flow-based Mobile Manipulation Framework with Latent-Space Reinforcement Learning</p>
+    <p class="authors"><strong>Shuhang Wang, Ziming Li, Le Zheng, Hui Cheng</strong><br/>Sun Yat-sen University</p>
+    <div class="buttons">
+      <a class="btn primary" href="paper.pdf">Paper PDF</a>
+      <a class="btn" href="#demo">Demo</a>
+      <a class="btn" href="#pipeline">Pipeline</a>
+      <a class="btn" href="#innovations">Key Innovations</a>
+      <a class="btn" href="#results">Results</a>
+    </div>
+  </div>
+</header>
 
 <main class="wrap">
 
-<section>
-<div class="figure">
-<video controls width="100%"><source src="assets/demo.mp4"></video>
-<p class="caption">Simulation and real-world performance of RLMM-Flow.</p>
-</div>
-</section>
+  <section id="demo">
+    <span class="section-kicker">Real-world deployment</span>
+    <h2>Whole-body Mobile Manipulation</h2>
+    <p class="lead">
+      RLMM-Flow is directly transferred to a real mobile manipulator without reconstructing a real execution-trajectory dataset, online reinforcement learning, or additional real-world fine-tuning.
+    </p>
+    <figure class="figure">
+      <video controls playsinline preload="metadata">
+        <source src="assets/demo.mp4" type="video/mp4" />
+        Your browser does not support embedded video.
+      </video>
+      <figcaption class="caption">
+        Real-world deployment on a Unitree Z1 6-DoF manipulator mounted on an AgileX Tracer differential-drive base. A Livox MID-360 and FastLIO2 provide robot-centric local point clouds, and inference runs on an NVIDIA Jetson AGX Orin.
+      </figcaption>
+    </figure>
+  </section>
 
-<section>
-<h2>Abstract</h2>
-<div class="card">
-RLMM-Flow extends latent-space reinforcement learning to point-cloud-conditioned
-flow policies for mobile manipulation. It first pretrains a cascaded transformer
-flow policy on expert whole-body trajectories, then learns a latent actor to
-steer the flow latent noise while keeping the generative policy frozen.
-This enables reward-guided improvement without directly optimizing the
-high-dimensional action chunk space.
-</div>
-</section>
+  <section id="abstract">
+    <h2>Abstract</h2>
+    <p class="lead">
+      Mobile manipulation requires generating whole-body action chunks that jointly satisfy goal reaching, collision avoidance, base kinematic constraints, manipulator joint limits, trajectory smoothness, and base-arm coordination. RLMM-Flow first pretrains a point-cloud-conditioned transformer flow policy on expert whole-body trajectories. The pretrained flow policy is then frozen, while a latent actor steers its initial noise toward higher-value action chunks. To stabilize high-dimensional latent optimization, RLMM-Flow warms up an action-space critic before latent actor-critic optimization and progressively expands latent control from a low-dimensional horizon-shared representation to a high-dimensional residual representation.
+    </p>
+  </section>
 
-<section>
-<h2>RLMM-Flow Pipeline</h2>
-<div class="figure"><img src="assets/pipeline.png">
-<p class="caption">Pipeline overview of RLMM-Flow.</p></div>
-<div class="card">
-The training pipeline contains two stages. First, a flow policy is pretrained
-using high-quality expert trajectories to learn a stable whole-body trajectory
-prior. Second, offline reinforcement learning optimizes a latent actor and
-latent critic. Instead of modifying the flow network, the learned latent policy
-steers the initial noise distribution, and the frozen flow model decodes the
-optimized latent into feasible action chunks.
-</div>
-</section>
+  <section id="pipeline">
+    <span class="section-kicker">Method overview</span>
+    <h2>RLMM-Flow Pipeline</h2>
+    <p class="lead">
+      RLMM-Flow separates trajectory-prior learning from reward-guided policy improvement. Expert pretraining provides a stable multimodal whole-body motion prior; offline RL then improves the initial flow noise without modifying the pretrained generator.
+    </p>
 
-<section>
-<h2>Network Architecture</h2>
-<div class="figure"><img src="assets/network.png">
-<p class="caption">Network architecture of the cascaded transformer flow policy.</p></div>
-<div class="card">
-The policy receives robot-centric local point clouds, robot state, task target,
-and flow time embedding. A Point Transformer encodes the geometric scene
-representation. The action generation network uses cascaded Transformer blocks:
-the base trajectory is generated before the arm trajectory, explicitly modeling
-the heterogeneous structure between mobile base motion and manipulator motion.
-</div>
-</section>
+    <figure class="figure">
+      <img src="assets/pipeline.png"
+           alt="RLMM-Flow training and inference pipeline with flow pretraining, action-critic warm-up, latent actor-critic learning, and coarse-to-fine latent steering" />
+      <figcaption class="caption">
+        Overall training and inference pipeline of RLMM-Flow. A frozen flow policy decodes reward-steered latent noise into whole-body action chunks.
+      </figcaption>
+    </figure>
 
-<section>
-<h2>Qualitative Comparison of Whole-body Trajectories</h2>
-<div class="figure"><img src="assets/trajectory.png">
-<p class="caption">Qualitative visualization of whole-body trajectories generated by different offline RL post-training methods.</p></div>
-<div class="card">
-Compared with other offline RL post-training methods, RLMM-Flow generates
-more physically feasible whole-body trajectories. The generated base path
-maintains safer clearance from obstacles, while the manipulator motion becomes
-more compact near the target region. These improvements are consistent with
-the quantitative gains in collision rate, trajectory smoothness, and arm path
-length.
-</div>
-</section>
+    <div class="explanation">
+      <p>
+        Given a robot-centric local 3D point cloud, the current robot state, and the task goal, the model directly predicts a future action chunk for both the mobile base and manipulator. In the first stage, high-quality expert trajectories are used to pretrain the flow policy. In the second stage, an action critic learns trajectory value from offline transitions, a latent critic distills action-space value into the flow latent space, and a latent actor learns to produce higher-value initial noise. Because the flow policy remains frozen, reward optimization preserves the learned motion prior and adds only negligible inference overhead.
+      </p>
 
-<section>
-<h2>Quantitative Results</h2>
-<div class="card">
-<h3>Simulation: Offline RL Post-training</h3>
-<table>
-<tr><th>Method</th><th>Success ↑</th><th>Collision ↓</th><th>Joint Viol. ↓</th><th>Smooth ↓</th></tr>
-<tr><td>DSRL-NA (Flow)</td><td>40</td><td>21</td><td>14</td><td>0.22</td></tr>
-<tr><td>RLMM-Flow-QA</td><td>42</td><td>18</td><td>9</td><td>0.20</td></tr>
-<tr><td>RLMM-Flow-CF</td><td>43</td><td>15</td><td>12</td><td>0.22</td></tr>
-<tr><td><b>RLMM-Flow</b></td><td><b>46</b></td><td><b>12</b></td><td><b>8</b></td><td><b>0.19</b></td></tr>
-</table>
-</div>
+      <div class="stage-flow" aria-label="RLMM-Flow training stages">
+        <span class="stage">Expert Flow Pretraining</span>
+        <span class="arrow">→</span>
+        <span class="stage emphasis">Q<sup>A</sup> Warm-up</span>
+        <span class="arrow">→</span>
+        <span class="stage">Latent Critic Distillation</span>
+        <span class="arrow">→</span>
+        <span class="stage emphasis">Coarse-to-Fine Steering</span>
+      </div>
+    </div>
+  </section>
 
-<div class="cards">
-<div class="card"><span class="num">+6%</span><br>Success improvement over DSRL-NA</div>
-<div class="card"><span class="num">-9%</span><br>Collision reduction over DSRL-NA</div>
-<div class="card"><span class="num">0.21s</span><br>Inference time</div>
-</div>
-</section>
+  <section id="network">
+    <span class="section-kicker">Architecture</span>
+    <h2>Network Architecture</h2>
+    <p class="lead">
+      RLMM-Flow contains four main networks: a pretrained flow policy, a latent actor π<sup>W</sup>, an action critic Q<sup>A</sup>, and a latent critic Q<sup>W</sup>.
+    </p>
 
-<section>
-<h2>Real-world Results</h2>
-<div class="card">
-RLMM-Flow is deployed directly on a mobile manipulator without real-world
-fine-tuning. It achieves <b>32% success rate</b>, <b>9 collision events</b>,
-and <b>6 joint violations</b> over 50 trials while maintaining fast inference.
-</div>
-</section>
+    <figure class="figure">
+      <img src="assets/network.png"
+           alt="Network architecture of the latent actor network" />
+      <figcaption class="caption">
+        Network architecture of the latent actor network.
+      </figcaption>
+    </figure>
+
+    <div class="explanation">
+      <p>
+        The latent steering network adopts a cascaded Transformer architecture. Since the mobile base and manipulator have different motion roles, the network first predicts the base-related latent component and then predicts the arm-related latent component conditioned on the base prediction. This structured latent steering captures the dependency between global navigation and local manipulation. </p>
+    </div>
+  </section>
+
+  <section id="innovations">
+    <span class="section-kicker">Core contributions</span>
+    <h2>Key Innovations</h2>
+
+    <article class="innovation warm">
+      <div class="innovation-tag">Q<sup>A</sup><br/>Warm-up</div>
+      <div>
+        <h3>Action-Critic Warm-up Stabilizes Latent Value Learning</h3>
+        <p>
+          The latent critic Q<sup>W</sup> is supervised by values produced by the action critic Q<sup>A</sup>. Jointly training both critics from the beginning creates a moving-target problem: Q<sup>W</sup> must fit action-space values that are still inaccurate and rapidly changing. RLMM-Flow therefore trains Q<sup>A</sup> alone during the first 20k update steps, then starts latent-critic distillation and latent-actor optimization.
+        </p>
+        <p>
+          Warm-up is not merely extra training time. It improves the supervision quality available to Q<sup>W</sup>, reduces late-stage latent-critic loss, and provides a more reliable optimization direction for the latent actor. In the experiments, the QA variant primarily improves joint constraints, smoothness, and manipulator joint-path length.
+        </p>
+      </div>
+    </article>
+
+    <article class="innovation">
+      <div class="innovation-tag">Coarse<br/>→ Fine</div>
+      <div>
+        <h3>Coarse-to-Fine Latent Steering Reduces High-Dimensional Search Difficulty</h3>
+        <p>
+          The latent actor first outputs a full-dimensional raw latent. The coarse branch averages this latent over the action-horizon dimension and repeats the pooled representation across the horizon. This horizon-shared latent preserves global steering information—such as the base motion direction, obstacle-bypassing trend, and large-scale arm posture—while reducing the effective early-stage search space.
+        </p>
+        <p>
+          During early post-training, only coarse steering is used. At 50k update steps, the fine residual branch is activated and the original high-dimensional per-time-step latent is added as a residual. This recovers fine-grained expressiveness for local obstacle avoidance, end-effector correction, and manipulator joint-pose refinement. The method is therefore not fixed latent downsampling; it explicitly decouples stable global search from later high-dimensional detail refinement.
+        </p>
+      </div>
+    </article>
+
+    <article class="innovation">
+      <div class="innovation-tag">Base<br/>→ Arm</div>
+      <div>
+        <h3>Cascaded Whole-body Flow Policy</h3>
+        <p>
+            The latent steering network adopts a cascaded Transformer architecture. 
+        </p>
+      </div>
+    </article>
+  </section>
+
+  <section id="training-analysis">
+    <span class="section-kicker">Training dynamics</span>
+    <h2>Why the Two Stabilization Mechanisms Matter</h2>
+    <div class="two-col">
+      <figure class="mini-figure">
+        <img src="assets/reward.png"
+             alt="Evaluation reward curves of DSRL-NA, RLMM-Flow-QA, RLMM-Flow-CF, and RLMM-Flow" />
+        <figcaption class="caption">
+          Evaluation reward curves. DSRL-NA improves early but saturates; coarse-to-fine steering contributes further middle- and late-stage gains, while the full method reaches the highest reward.
+        </figcaption>
+      </figure>
+
+      <figure class="mini-figure">
+        <img src="assets/qw.png"
+             alt="Latent critic loss with joint training and action-critic warm-up" />
+        <figcaption class="caption">
+          Effect of Q<sup>A</sup> warm-up on latent-critic learning. After warm-up, Q<sup>W</sup> receives a more stable action-space target and reaches a lower late-stage loss than joint training.
+        </figcaption>
+      </figure>
+    </div>
+
+    <div class="callout">
+      The two mechanisms are complementary: Q<sup>A</sup> warm-up reduces supervision noise for the latent critic, while coarse-to-fine steering reduces the difficulty of searching directly in a full-horizon latent space.
+    </div>
+  </section>
+
+  <section id="qualitative">
+    <span class="section-kicker">Qualitative comparison</span>
+    <h2>Whole-body Trajectory Generation</h2>
+    <figure class="figure">
+      <img src="assets/compare.png"
+           alt="Qualitative comparison of whole-body trajectories generated by offline RL post-training methods" />
+      <figcaption class="caption">
+        Qualitative visualization of whole-body trajectories generated by different offline RL post-training methods.
+      </figcaption>
+    </figure>
+
+    <div class="explanation">
+      <p>
+        The evaluation scenes contain narrow passages, furniture obstacles, and target regions that require coordinated base and arm motion. The main views show the global base path and manipulator motion trend, while the zoomed views reveal the end-effector clearance around obstacles.
+      </p>
+      <p>
+        Methods without sufficient reward-guided post-training can generate roughly feasible base paths, but their end effectors move closer to obstacles and exhibit less stable local pose changes near the target. RLMM-Flow produces smoother whole-body trajectories, more compact base paths, safer local clearance, and fewer unnecessary joint movements. The visualization is consistent with the quantitative improvements in collision, joint violation, smoothness, and arm-path length.
+      </p>
+    </div>
+  </section>
+
+  <section id="results">
+    <span class="section-kicker">Quantitative evaluation</span>
+    <h2>Results against DSRL-NA</h2>
+
+    <div class="cards">
+      <div class="card featured">
+        <span class="num">+6 / +8 pts</span>
+        <b>Success on seen / unseen scenes</b>
+        <div class="small">46% vs. 40% on seen scenes; 38% vs. 30% on unseen scenes.</div>
+      </div>
+      <div class="card featured">
+        <span class="num">−9 / −7 pts</span>
+        <b>Collision rate on seen / unseen scenes</b>
+        <div class="small">12% vs. 21% on seen scenes; 32% vs. 39% on unseen scenes.</div>
+      </div>
+      <div class="card featured">
+        <span class="num">+8 pts</span>
+        <b>Real-world success</b>
+        <div class="small">32% vs. 24% over 50 real-robot trials, with the same 0.21 s inference time.</div>
+      </div>
+    </div>
+
+    <h3 class="split-title">Seen Simulation Scenes</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Succ. (%) ↑</th>
+            <th>Coll. (%) ↓</th>
+            <th>Joint Viol. (%) ↓</th>
+            <th>Smooth. ↓</th>
+            <th>Time (s) ↓</th>
+            <th>Base Len. (m) ↓</th>
+            <th>Arm Len. (rad) ↓</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Action-space AWR</td><td>36</td><td>26</td><td>18</td><td>0.24</td><td>0.19</td><td>5.52</td><td>7.20</td></tr>
+          <tr><td>Action-space IQL</td><td>37</td><td>24</td><td>17</td><td>0.25</td><td>0.19</td><td>5.56</td><td>7.35</td></tr>
+          <tr><td>DSRL-NA (Flow)</td><td>40</td><td>21</td><td>14</td><td>0.22</td><td>0.21</td><td>5.47</td><td>7.04</td></tr>
+          <tr><td>RLMM-Flow-QA</td><td>42</td><td>18</td><td>9</td><td>0.20</td><td>0.21</td><td>5.41</td><td>6.82</td></tr>
+          <tr><td>RLMM-Flow-CF</td><td>43</td><td>15</td><td>12</td><td>0.22</td><td>0.21</td><td>5.48</td><td>7.08</td></tr>
+          <tr class="best"><td><strong>RLMM-Flow</strong></td><td class="up">46</td><td class="up">12</td><td class="up">8</td><td class="up">0.19</td><td>0.21</td><td class="up">5.36</td><td class="up">6.76</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="split-title">Unseen Simulation Scenes</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Succ. (%) ↑</th>
+            <th>Coll. (%) ↓</th>
+            <th>Joint Viol. (%) ↓</th>
+            <th>Smooth. ↓</th>
+            <th>Time (s) ↓</th>
+            <th>Base Len. (m) ↓</th>
+            <th>Arm Len. (rad) ↓</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Action-space AWR</td><td>25</td><td>46</td><td>22</td><td>0.32</td><td>0.19</td><td>4.45</td><td>7.88</td></tr>
+          <tr><td>Action-space IQL</td><td>24</td><td>43</td><td>21</td><td>0.33</td><td>0.19</td><td>4.50</td><td>8.02</td></tr>
+          <tr><td>DSRL-NA (Flow)</td><td>30</td><td>39</td><td>17</td><td>0.30</td><td>0.21</td><td>4.44</td><td>7.56</td></tr>
+          <tr><td>RLMM-Flow-QA</td><td>34</td><td>37</td><td>13</td><td>0.28</td><td>0.21</td><td>4.41</td><td>7.28</td></tr>
+          <tr><td>RLMM-Flow-CF</td><td>33</td><td>34</td><td>15</td><td>0.30</td><td>0.21</td><td>4.45</td><td>7.54</td></tr>
+          <tr class="best"><td><strong>RLMM-Flow</strong></td><td class="up">38</td><td class="up">32</td><td class="up">12</td><td class="up">0.27</td><td>0.21</td><td class="up">4.37</td><td class="up">7.18</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="split-title">Real-world Indoor Deployment — 50 Trials</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Succ. (%) ↑</th>
+            <th>Collision ↓</th>
+            <th>Joint Viol. ↓</th>
+            <th>Smooth. ↓</th>
+            <th>Avg. Inf. Time (s) ↓</th>
+            <th>Base Len. (m) ↓</th>
+            <th>Arm Len. (rad) ↓</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Action-space AWR</td><td>18</td><td>18</td><td>12</td><td>0.32</td><td>0.19</td><td>4.71</td><td>8.05</td></tr>
+          <tr><td>Action-space IQL</td><td>20</td><td>17</td><td>11</td><td>0.33</td><td>0.19</td><td>4.75</td><td>8.18</td></tr>
+          <tr><td>DSRL-NA (Flow)</td><td>24</td><td>15</td><td>9</td><td>0.30</td><td>0.21</td><td>4.68</td><td>7.82</td></tr>
+          <tr><td>RLMM-Flow-QA</td><td>28</td><td>13</td><td>7</td><td>0.27</td><td>0.21</td><td>4.62</td><td>7.52</td></tr>
+          <tr><td>RLMM-Flow-CF</td><td>26</td><td>11</td><td>8</td><td>0.29</td><td>0.21</td><td>4.65</td><td>7.78</td></tr>
+          <tr class="best"><td><strong>RLMM-Flow</strong></td><td class="up">32</td><td class="up">9</td><td class="up">6</td><td class="up">0.26</td><td>0.21</td><td class="up">4.57</td><td class="up">7.44</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      Compared with DSRL-NA, the full method improves seen-scene success by 6 percentage points and unseen-scene success by 8 points, while reducing collision, joint violations, smoothness penalty, and manipulator motion. In the real world, it raises success from 24% to 32%, reduces collisions from 15 to 9 and joint violations from 9 to 6, and preserves the same 0.21 s inference time.
+    </div>
+  </section>
 
 </main>
+
+<footer>
+  <div class="wrap">RLMM-Flow project page · Sun Yat-sen University</div>
+</footer>
 </body>
 </html>
